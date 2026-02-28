@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPG Infraprojects — Bank Facility Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --white: #ffffff;
+    --off-white: #fdf6f9;
+    --light: #fef0f5;
+    --pink-pale: #fce4ef;
+    --pink: #e8517a;
+    --pink-dark: #c73560;
+    --pink-soft: #f2789f;
+    --pink-border: #f5c6d8;
+    --text: #1a1a2e;
+    --text-muted: #7a7a9a;
+    --text-light: #a0a0b8;
+    --border: #eedae5;
+    --shadow: 0 2px 16px rgba(232,81,122,0.08);
+    --shadow-hover: 0 8px 32px rgba(232,81,122,0.15);
+    --hdfc:  #1a6dff;
+    --yes:   #2aaa6e;
+    --kotak: #e05c1a;
+    --icici: #7c3aed;
+    --pnb:   #b8860b;
+    --axis:  #c0392b;
+    --au:    #0e9f78;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--off-white);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--white);
+    border-bottom: 2px solid var(--pink-border);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 70px;
+    box-shadow: 0 2px 12px rgba(232,81,122,0.06);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo-area { display: flex; align-items: center; gap: 14px; }
+  .logo-circle {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    color: #fff; font-size: 16px; font-weight: 700; letter-spacing: -1px;
+  }
+  .logo-text h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; font-weight: 700; color: var(--text);
+    line-height: 1.1;
+  }
+  .logo-text p { font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; }
+  .header-right {
+    display: flex; align-items: center; gap: 20px;
+  }
+  .header-badge {
+    background: var(--light);
+    border: 1px solid var(--pink-border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 11px;
+    color: var(--pink-dark);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── TABS ── */
+  .bank-tabs {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    padding: 14px 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--pink); }
+  .tab-btn.active { color: var(--pink-dark); border-bottom-color: var(--pink); font-weight: 600; }
+
+  /* ── MAIN ── */
+  .main { padding: 32px 40px; max-width: 1500px; margin: 0 auto; }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .section-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
+  .pink-line {
+    width: 40px; height: 3px;
+    background: linear-gradient(90deg, var(--pink), var(--pink-soft));
+    border-radius: 2px;
+    margin-bottom: 6px;
+  }
+
+  /* ── VIEWS ── */
+  .bank-view, .all-view { display: none; }
+  .bank-view.active, .all-view.active { display: block; }
+
+  /* ── KPI GRID ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .kpi-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .kpi-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .kpi-icon { font-size: 18px; margin-bottom: 10px; }
+  .kpi-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+  .kpi-value { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--text); }
+  .kpi-value.pink { color: var(--pink-dark); }
+  .kpi-sub { font-size: 11px; color: var(--text-light); margin-top: 3px; }
+
+  /* ── CHARTS ROW ── */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .chart-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .chart-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chart-title::before {
+    content: '';
+    display: inline-block;
+    width: 10px; height: 3px;
+    background: var(--pink);
+    border-radius: 2px;
+  }
+  .chart-wrap { position: relative; height: 220px; }
+
+  /* ── TABLE ── */
+  .table-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-bottom: 28px;
+  }
+  .table-header {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .table-header-title {
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .table-header-title::before {
+    content: '';
+    display: inline-block;
+    width: 10px; height: 3px;
+    background: var(--pink);
+    border-radius: 2px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--light);
+    padding: 10px 20px;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 12px 20px; font-size: 13px; border-bottom: 1px solid var(--border); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--light); }
+  .val-badge {
+    display: inline-block;
+    background: var(--pink-pale);
+    color: var(--pink-dark);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--pink-border);
+  }
+
+  /* ── ALL BANKS ── */
+  .summary-banner {
+    background: linear-gradient(135deg, var(--pink-dark) 0%, var(--pink) 50%, var(--pink-soft) 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(199,53,96,0.25);
+  }
+  .banner-left h2 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .banner-left p { font-size: 13px; opacity: 0.85; }
+  .banner-stats { display: flex; gap: 32px; }
+  .banner-stat { text-align: center; }
+  .banner-stat-val { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; }
+  .banner-stat-label { font-size: 11px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .bank-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
+    cursor: pointer;
+    border-top: 3px solid transparent;
+  }
+  .bank-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .bank-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .bank-pill {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .bank-card-name { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; }
+  .bank-stat { display: flex; justify-content: space-between; margin-bottom: 7px; font-size: 12px; }
+  .bank-stat-label { color: var(--text-muted); }
+  .bank-stat-val { font-weight: 600; color: var(--text); }
+  .bank-total {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .bank-total-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+  .bank-total-val { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--pink-dark); }
+
+  .full-chart-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+  .full-chart-wrap { position: relative; height: 300px; }
+
+  /* Rate bars */
+  .rate-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .rate-bar-label { width: 80px; font-size: 12px; font-weight: 600; color: var(--text); }
+  .rate-bar-track {
+    flex: 1; height: 10px; background: var(--light);
+    border-radius: 6px; overflow: hidden;
+    border: 1px solid var(--pink-border);
+  }
+  .rate-bar-fill { height: 100%; border-radius: 6px; transition: width 0.9s ease; }
+  .rate-bar-val { width: 55px; text-align: right; font-size: 12px; font-weight: 700; }
+
+  /* Two col layout */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+  /* Bank header (individual) */
+  .bank-hero {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    border-left: 5px solid var(--pink);
+  }
+  .bank-hero-left h2 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+  .bank-hero-left p { font-size: 13px; color: var(--text-muted); }
+  .bank-hero-right { text-align: right; }
+  .bank-hero-total { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; color: var(--pink-dark); }
+  .bank-hero-total-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+
+  @media (max-width: 768px) {
+    header, .bank-tabs, .main { padding-left: 16px; padding-right: 16px; }
+    .charts-row, .two-col { grid-template-columns: 1fr; }
+    .summary-banner { flex-direction: column; gap: 16px; }
+    .banner-stats { gap: 20px; }
+    .bank-hero { flex-direction: column; gap: 12px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-area">
+    <div class="logo-circle">SPG</div>
+    <div class="logo-text">
+      <h1>SPG Infraprojects Pvt. Ltd.</h1>
+      <p>Bank Credit Facility Dashboard</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-badge">📅 FY 2025–26</div>
+    <div class="header-badge">🏦 7 Banks · ₹26,300 Cr Total</div>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="bank-tabs">
+  <button class="tab-btn active" data-bank="ALL" onclick="showBank('ALL')">🏛 All Banks</button>
+  <button class="tab-btn" data-bank="HDFC" onclick="showBank('HDFC')">HDFC</button>
+  <button class="tab-btn" data-bank="Yes" onclick="showBank('Yes')">Yes Bank</button>
+  <button class="tab-btn" data-bank="Kotak" onclick="showBank('Kotak')">Kotak</button>
+  <button class="tab-btn" data-bank="ICICI" onclick="showBank('ICICI')">ICICI</button>
+  <button class="tab-btn" data-bank="PNB" onclick="showBank('PNB')">PNB</button>
+  <button class="tab-btn" data-bank="Axis" onclick="showBank('Axis')">Axis Bank</button>
+  <button class="tab-btn" data-bank="AU" onclick="showBank('AU')">AU Bank</button>
+</div>
+
+<div class="main">
+
+<!-- ════════════ ALL BANKS VIEW ════════════ -->
+<div class="all-view active" id="view-ALL">
+
+  <div class="summary-banner">
+    <div class="banner-left">
+      <h2>Total Bank Credit Facility</h2>
+      <p>Consolidated credit limits across all banking partners</p>
+    </div>
+    <div class="banner-stats">
+      <div class="banner-stat">
+        <div class="banner-stat-val">₹26,300</div>
+        <div class="banner-stat-label">Cr Total Facility</div>
+      </div>
+      <div class="banner-stat">
+        <div class="banner-stat-val">7</div>
+        <div class="banner-stat-label">Banking Partners</div>
+      </div>
+      <div class="banner-stat">
+        <div class="banner-stat-val">₹5,450</div>
+        <div class="banner-stat-label">Cr CC Limit</div>
+      </div>
+      <div class="banner-stat">
+        <div class="banner-stat-val">₹19,700</div>
+        <div class="banner-stat-label">Cr BG Limit</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bank Cards -->
+  <div class="comparison-grid" id="bank-cards"></div>
+
+  <!-- Charts Row 1 -->
+  <div class="full-chart-card">
+    <div class="chart-title">Total Facility & Limit Breakdown by Bank (₹ Crore)</div>
+    <div class="full-chart-wrap"><canvas id="allLimitsChart"></canvas></div>
+  </div>
+
+  <div class="two-col">
+    <div class="full-chart-card" style="margin-bottom:0">
+      <div class="chart-title">WCDL / Interest Rate Comparison (%)</div>
+      <div style="margin-top:4px" id="rateBarContainer"></div>
+    </div>
+    <div class="full-chart-card" style="margin-bottom:0">
+      <div class="chart-title">Multi-Bank Rate Profile (Radar)</div>
+      <div class="full-chart-wrap" style="height:260px"><canvas id="radarChart"></canvas></div>
+    </div>
+  </div>
+
+  <div style="height:20px"></div>
+
+  <div class="full-chart-card">
+    <div class="chart-title">BG Commission & Spread Comparison — All Banks (%)</div>
+    <div class="full-chart-wrap" style="height:240px"><canvas id="chargesChart"></canvas></div>
+  </div>
+
+  <!-- Comparison Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <div class="table-header-title">Detailed Bank Comparison</div>
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Bank</th>
+          <th>CC Limit (₹Cr)</th>
+          <th>BG Limit (₹Cr)</th>
+          <th>Total (₹Cr)</th>
+          <th>Interest Rate</th>
+          <th>Repo Rate</th>
+          <th>Spread</th>
+          <th>BG Commission</th>
+          <th>Collateral</th>
+          <th>Foreclosure</th>
+        </tr>
+      </thead>
+      <tbody id="allTableBody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ INDIVIDUAL BANK VIEWS ════════════ -->
+<div id="individual-views"></div>
+
+</div><!-- /main -->
+
+<script>
+const BANKS = {
+  HDFC:  {
+    color: '#1a6dff',
+    limits: { CC: 850, BG: 4000 },
+    totalFacility: 6000,
+    collateral: 30, bgMargin: 10, bgCommission: 0.85,
+    processingFee: 0.10, renewalFee: 0.10,
+    interestRate: 9.19, spread: 2.85, repoRate: 6.00,
+    commitment: 'As Per Approval',
+    lcMargin: 10, lcCharges: 0.85, wcdlROI: 8.10,
+    forecloseCharge: '1% after 6 months / 4% within 6 months',
+    jvBg: '—',
+    lcMargPct: 10,
+    wcdlLimit: 1150, dlodSub: 800, lcSub: 200,
+    bgInterchangeable: 'Yes'
+  },
+  Yes:   {
+    color: '#2aaa6e',
+    limits: { CC: 500, BG: 4000 },
+    totalFacility: 4500,
+    collateral: 30, bgMargin: 10, bgCommission: 0.80,
+    processingFee: 0.10, renewalFee: 0.20,
+    interestRate: 8.85, spread: 2.85, repoRate: 6.00,
+    commitment: '8.90%',
+    lcMargin: 10, lcCharges: 0.80, wcdlROI: 0.80,
+    forecloseCharge: '4%', jvBg: 'Allowed',
+    lcMargPct: 10, wcdlLimit: 300, dlodSub: 300, lcSub: 500,
+    bgInterchangeable: 'Yes'
+  },
+  Kotak: {
+    color: '#e05c1a',
+    limits: { CC: 500, BG: 2000 },
+    totalFacility: 2500,
+    collateral: 30, bgMargin: 10, bgCommission: 0.85,
+    processingFee: 0.10, renewalFee: 0.10,
+    interestRate: 8.15, spread: 2.15, repoRate: 6.00,
+    commitment: 'As Per Approval',
+    lcMargin: 10, lcCharges: 0.85, wcdlROI: 0.85,
+    forecloseCharge: '0%', jvBg: 'Allowed',
+    lcMargPct: 10, wcdlLimit: 300, dlodSub: 300, lcSub: 2000,
+    bgInterchangeable: 'Yes'
+  },
+  ICICI: {
+    color: '#7c3aed',
+    limits: { CC: 1150, BG: 1800 },
+    totalFacility: 2950,
+    collateral: 40, bgMargin: 10, bgCommission: 1.00,
+    processingFee: 0.10, renewalFee: 0.10,
+    interestRate: 8.90, spread: 2.90, repoRate: 6.00,
+    commitment: '8.65%',
+    lcMargin: 10, lcCharges: 1.00, wcdlROI: 1.00,
+    forecloseCharge: 'Nil', jvBg: 'For projects awarded to JV Co. but executed solely by firm, ICICI can consider',
+    lcMargPct: 10, wcdlLimit: 920, dlodSub: 500, lcSub: 0,
+    bgInterchangeable: 'Yes'
+  },
+  PNB:   {
+    color: '#b8860b',
+    limits: { CC: 1450, BG: 1500 },
+    totalFacility: 2950,
+    collateral: 42.27, bgMargin: 10, bgCommission: 1.00,
+    processingFee: 0.10, renewalFee: 0.10,
+    interestRate: 8.25, spread: 2.75, repoRate: 5.50,
+    commitment: 'N/A',
+    lcMargin: 10, lcCharges: 1.00, wcdlROI: 0.93,
+    forecloseCharge: '2%', jvBg: 'At least 51% share in JV',
+    lcMargPct: 10, wcdlLimit: 0, dlodSub: 500, lcSub: 0,
+    bgInterchangeable: '—'
+  },
+  Axis:  {
+    color: '#c0392b',
+    limits: { CC: 900, BG: 1500 },
+    totalFacility: 2400,
+    collateral: 30, bgMargin: 10, bgCommission: 0.90,
+    processingFee: 0.10, renewalFee: 0.10,
+    interestRate: 8.70, spread: 2.70, repoRate: 6.00,
+    commitment: 'As Per Approval',
+    lcMargin: 10, lcCharges: 0.90, wcdlROI: 0.90,
+    forecloseCharge: 'Allowed', jvBg: 'Allowed',
+    lcMargPct: 10, wcdlLimit: 0, dlodSub: 500, lcSub: 0,
+    bgInterchangeable: '—'
+  },
+  AU:    {
+    color: '#0e9f78',
+    limits: { CC: 100, BG: 4900 },
+    totalFacility: 5000,
+    collateral: 30, bgMargin: 10, bgCommission: 0.85,
+    processingFee: 0.10, renewalFee: 0.10,
+    interestRate: 9.75, spread: 4.25, repoRate: 5.50,
+    commitment: 'N/A',
+    lcMargin: 10, lcCharges: 0.85, wcdlROI: 0.85,
+    forecloseCharge: 'Allowed', jvBg: 'Allowed',
+    lcMargPct: 10, wcdlLimit: 0, dlodSub: 500, lcSub: 0,
+    bgInterchangeable: '—'
+  },
+};
+
+const bankNames = Object.keys(BANKS);
+
+// ── BANK CARDS ──
+const cardsEl = document.getElementById('bank-cards');
+bankNames.forEach(b => {
+  const d = BANKS[b];
+  cardsEl.innerHTML += `
+  <div class="bank-card" style="border-top-color:${d.color}" onclick="showBank('${b}')">
+    <div class="bank-card-header">
+      <div class="bank-pill" style="background:${d.color}"></div>
+      <div class="bank-card-name">${b}</div>
+    </div>
+    <div class="bank-stat"><span class="bank-stat-label">CC Limit</span><span class="bank-stat-val">₹${d.limits.CC} Cr</span></div>
+    <div class="bank-stat"><span class="bank-stat-label">BG Limit</span><span class="bank-stat-val">₹${d.limits.BG} Cr</span></div>
+    <div class="bank-stat"><span class="bank-stat-label">Interest Rate</span><span class="bank-stat-val" style="color:${d.color}">${d.interestRate}%</span></div>
+    <div class="bank-stat"><span class="bank-stat-label">BG Commission</span><span class="bank-stat-val">${d.bgCommission}%</span></div>
+    <div class="bank-stat"><span class="bank-stat-label">Collateral</span><span class="bank-stat-val">${d.collateral}%</span></div>
+    <div class="bank-total">
+      <span class="bank-total-label">Total Facility</span>
+      <span class="bank-total-val">₹${d.totalFacility} Cr</span>
+    </div>
+  </div>`;
+});
+
+// ── ALL LIMITS CHART ──
+new Chart(document.getElementById('allLimitsChart'), {
+  type: 'bar',
+  data: {
+    labels: bankNames,
+    datasets: [
+      {
+        label: 'CC Limit (₹Cr)',
+        data: bankNames.map(b => BANKS[b].limits.CC),
+        backgroundColor: '#e8517a',
+        borderRadius: 5,
+      },
+      {
+        label: 'BG Limit (₹Cr)',
+        data: bankNames.map(b => BANKS[b].limits.BG),
+        backgroundColor: '#f5c6d8',
+        borderRadius: 5,
+      },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { font: { family: 'Inter', size: 11 }, color: '#7a7a9a' } } },
+    scales: {
+      x: { ticks: { color: '#7a7a9a', font: { family: 'Inter' } }, grid: { color: '#eedae5' } },
+      y: { ticks: { color: '#7a7a9a', font: { family: 'Inter' } }, grid: { color: '#eedae5' } }
+    }
+  }
+});
+
+// ── RATE BARS ──
+const rateContainer = document.getElementById('rateBarContainer');
+const maxRate = 10;
+bankNames.forEach(b => {
+  const d = BANKS[b];
+  const pct = (d.interestRate / maxRate * 100).toFixed(1);
+  rateContainer.innerHTML += `
+  <div class="rate-bar">
+    <div class="rate-bar-label">${b}</div>
+    <div class="rate-bar-track">
+      <div class="rate-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,#e8517a,${d.color})"></div>
+    </div>
+    <div class="rate-bar-val" style="color:${d.color}">${d.interestRate}%</div>
+  </div>`;
+});
+
+// ── RADAR CHART ──
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: ['Interest Rate/10', 'BG Commission×5', 'Collateral/5', 'Spread×2', 'Repo Rate/6'],
+    datasets: bankNames.map(b => ({
+      label: b,
+      data: [
+        BANKS[b].interestRate / 10,
+        BANKS[b].bgCommission * 5,
+        BANKS[b].collateral / 5,
+        BANKS[b].spread * 2,
+        BANKS[b].repoRate / 6
+      ],
+      borderColor: BANKS[b].color,
+      backgroundColor: BANKS[b].color + '18',
+      pointBackgroundColor: BANKS[b].color,
+      borderWidth: 1.5,
+      pointRadius: 3
+    }))
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      r: {
+        ticks: { color: '#a0a0b8', font: { size: 9 }, backdropColor: 'transparent' },
+        grid: { color: '#eedae5' },
+        pointLabels: { color: '#7a7a9a', font: { size: 10, family: 'Inter' } }
+      }
+    }
+  }
+});
+
+// ── CHARGES CHART ──
+new Chart(document.getElementById('chargesChart'), {
+  type: 'bar',
+  data: {
+    labels: bankNames,
+    datasets: [
+      {
+        label: 'BG Commission (%)',
+        data: bankNames.map(b => BANKS[b].bgCommission),
+        backgroundColor: '#e8517a',
+        borderRadius: 4,
+      },
+      {
+        label: 'Spread (%)',
+        data: bankNames.map(b => BANKS[b].spread),
+        backgroundColor: '#f5c6d8',
+        borderRadius: 4,
+      },
+      {
+        label: 'Renewal Fee (%)',
+        data: bankNames.map(b => BANKS[b].renewalFee),
+        backgroundColor: '#fce4ef',
+        borderRadius: 4,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { font: { family: 'Inter', size: 11 }, color: '#7a7a9a' } } },
+    scales: {
+      x: { ticks: { color: '#7a7a9a' }, grid: { color: '#eedae5' } },
+      y: { ticks: { color: '#7a7a9a' }, grid: { color: '#eedae5' } }
+    }
+  }
+});
+
+// ── ALL TABLE ──
+const tbody = document.getElementById('allTableBody');
+bankNames.forEach(b => {
+  const d = BANKS[b];
+  tbody.innerHTML += `<tr>
+    <td><span style="display:inline-flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:${d.color};display:inline-block"></span><strong>${b}</strong></span></td>
+    <td>₹${d.limits.CC} Cr</td>
+    <td>₹${d.limits.BG} Cr</td>
+    <td><strong>₹${d.totalFacility} Cr</strong></td>
+    <td><span class="val-badge">${d.interestRate}%</span></td>
+    <td>${d.repoRate}%</td>
+    <td>${d.spread}%</td>
+    <td>${d.bgCommission}%</td>
+    <td>${d.collateral}%</td>
+    <td style="font-size:11px;color:#7a7a9a">${d.forecloseCharge}</td>
+  </tr>`;
+});
+
+// ── INDIVIDUAL BANK VIEWS ──
+const indEl = document.getElementById('individual-views');
+bankNames.forEach(b => {
+  const d = BANKS[b];
+  indEl.innerHTML += `
+  <div class="bank-view" id="view-${b}">
+    <div class="bank-hero" style="border-left-color:${d.color}">
+      <div class="bank-hero-left">
+        <h2 style="color:${d.color}">${b} Bank</h2>
+        <p>Credit Facility Overview · FY 2025–26 · SPG Infraprojects Pvt. Ltd.</p>
+      </div>
+      <div class="bank-hero-right">
+        <div class="bank-hero-total">₹${d.totalFacility} Cr</div>
+        <div class="bank-hero-total-label">Total Sanctioned Facility</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-icon">🏦</div><div class="kpi-label">CC Limit</div><div class="kpi-value" style="color:${d.color}">₹${d.limits.CC} Cr</div></div>
+      <div class="kpi-card"><div class="kpi-icon">📄</div><div class="kpi-label">BG Limit</div><div class="kpi-value" style="color:${d.color}">₹${d.limits.BG} Cr</div></div>
+      <div class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-label">Interest / WCDL Rate</div><div class="kpi-value pink">${d.interestRate}%</div><div class="kpi-sub">3m T.Bill linked</div></div>
+      <div class="kpi-card"><div class="kpi-icon">🏛</div><div class="kpi-label">Repo Rate</div><div class="kpi-value">${d.repoRate}%</div></div>
+      <div class="kpi-card"><div class="kpi-icon">📊</div><div class="kpi-label">Spread</div><div class="kpi-value">${d.spread}%</div></div>
+      <div class="kpi-card"><div class="kpi-icon">🔒</div><div class="kpi-label">Collateral</div><div class="kpi-value">${d.collateral}%</div></div>
+      <div class="kpi-card"><div class="kpi-icon">🧾</div><div class="kpi-label">BG Commission</div><div class="kpi-value">${d.bgCommission}%</div></div>
+      <div class="kpi-card"><div class="kpi-icon">💸</div><div class="kpi-label">Processing Fee</div><div class="kpi-value">${d.processingFee}%</div></div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">CC vs BG Limit Split</div>
+        <div class="chart-wrap"><canvas id="pie-${b}"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Rate & Charge Breakdown (%)</div>
+        <div class="chart-wrap"><canvas id="bar-${b}"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header"><div class="table-header-title">Full Charges, Terms & Conditions</div></div>
+      <table>
+        <thead><tr><th>Parameter</th><th>Value</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Collateral Security</td><td><span class="val-badge">${d.collateral}%</span></td><td style="color:#7a7a9a;font-size:12px">On BG amount</td></tr>
+          <tr><td>BG Margin</td><td><span class="val-badge">${d.bgMargin}%</span></td><td></td></tr>
+          <tr><td>BG Commission</td><td><span class="val-badge">${d.bgCommission}%</span></td><td></td></tr>
+          <tr><td>Processing Fee (New / Enhancement)</td><td><span class="val-badge">${d.processingFee}%</span></td><td></td></tr>
+          <tr><td>Renewal Fee</td><td><span class="val-badge">${d.renewalFee}%</span></td><td></td></tr>
+          <tr><td>WCDL Interest Rate</td><td><span class="val-badge" style="background:${d.color}18;color:${d.color};border-color:${d.color}44">${d.interestRate}%</span></td><td style="color:#7a7a9a;font-size:12px">3m T.Bill linked</td></tr>
+          <tr><td>Repo Rate</td><td><span class="val-badge">${d.repoRate}%</span></td><td></td></tr>
+          <tr><td>Spread</td><td><span class="val-badge">${d.spread}%</span></td><td></td></tr>
+          <tr><td>Commitment Charges</td><td>${d.commitment}</td><td></td></tr>
+          <tr><td>LC Margin</td><td><span class="val-badge">${d.lcMargPct}%</span></td><td></td></tr>
+          <tr><td>LC Charges</td><td><span class="val-badge">${d.lcCharges}%</span></td><td></td></tr>
+          <tr><td>WCDL / LC ROI</td><td><span class="val-badge">${d.wcdlROI}%</span></td><td></td></tr>
+          <tr><td>Foreclosure Charges</td><td>${d.forecloseCharge}</td><td></td></tr>
+          <tr><td>JV BG Eligibility</td><td colspan="2" style="color:#7a7a9a;font-size:12px">${d.jvBg}</td></tr>
+          <tr><td>LC Interchangeable with BG</td><td>${d.bgInterchangeable}</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+});
+
+// Charts for individual bank views
+bankNames.forEach(b => {
+  const d = BANKS[b];
+  const pinkShades = ['#e8517a', '#f2789f'];
+  new Chart(document.getElementById(`pie-${b}`), {
+    type: 'doughnut',
+    data: {
+      labels: ['CC Limit', 'BG Limit'],
+      datasets: [{
+        data: [d.limits.CC, d.limits.BG],
+        backgroundColor: [d.color, d.color + '55'],
+        borderColor: '#fff',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: { labels: { font: { family: 'Inter', size: 12 }, color: '#7a7a9a', padding: 12 } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById(`bar-${b}`), {
+    type: 'bar',
+    data: {
+      labels: ['Interest Rate', 'Repo Rate', 'Spread', 'BG Commission×10', 'Collateral÷10'],
+      datasets: [{
+        data: [d.interestRate, d.repoRate, d.spread, d.bgCommission * 10, d.collateral / 10],
+        backgroundColor: [d.color, d.color + 'cc', d.color + 'aa', d.color + '77', d.color + '44'],
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#7a7a9a', font: { size: 10 } }, grid: { color: '#eedae5' } },
+        y: { ticks: { color: '#7a7a9a' }, grid: { color: '#eedae5' } }
+      }
+    }
+  });
+});
+
+function showBank(bank) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-bank="${bank}"]`).classList.add('active');
+  document.querySelectorAll('.bank-view, .all-view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${bank}`).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
